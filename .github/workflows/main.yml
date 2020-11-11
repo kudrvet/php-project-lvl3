@@ -20,8 +20,8 @@ jobs:
           # Specify the PHP version
           php-version: '7.4'
         
-      - name: install package
-        run: make install
+      - name: setup packages
+        run: make setup
       - name: run linter
         run: make lint
 
