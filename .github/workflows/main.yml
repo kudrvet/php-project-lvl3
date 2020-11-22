@@ -24,4 +24,6 @@ jobs:
         run: make setup
       - name: run linter
         run: make lint
+      - name: Execute tests via PHPUnit
+        run: make test
 
