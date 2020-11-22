@@ -1,26 +1,27 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Document</title>
-    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
-</head>
-<body>
+@extends('layouts.app')
 
-<div class="container">
-    @include('flash::message')
-</div>
+@section('content')
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>id</th>
+            <th>Name</th>
+            <th>Created_at</th>
+            <th>Updated_at</th>
 
-<!-- If using flash()->important() or flash()->overlay(), you'll need to pull in the JS for Twitter Bootstrap. -->
-<script src="//code.jquery.com/jquery.js"></script>
-<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td>{{$domain->id}}</td>
+            <td>{{$domain->name}}</td>
+            <td>{{$domain->created_at}}</td>
+            <td>{{$domain->updated_at}}</td>
+        </tr>
+        </tbody>
+    </table>
+@endsection
 
-<script>
-    $('#flash-overlay-modal').modal();
-</script>
 
-{{dd($domain)}}
-</body>
-</html>
 
 
