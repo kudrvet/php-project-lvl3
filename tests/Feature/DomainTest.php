@@ -17,7 +17,7 @@ class DomainsTest extends TestCase
 {
 //    use DatabaseTransactions;
 //    use DatabaseMigrations;
-    use RefreshDatabase;
+//    use RefreshDatabase;
     /**
      * A basic test example.
      *
@@ -29,7 +29,6 @@ class DomainsTest extends TestCase
     {
         parent::setUp();
         $this->seed(DomainSeeder::class);
-//        Domain::factory()->count(2)->create();
     }
 
     public function testHomepage()
@@ -41,25 +40,22 @@ class DomainsTest extends TestCase
 
     public function testDomainStoreInvalidInput()
     {
-        $incorrectData = 'asdd';
-        $response = $this->post(route('domains.store'),['domain'=> ['name' => $incorrectData]]);
-        $response->assertRedirect(route('homepage'));
-        $response->assertSessionHasErrors();
-
+        $incorrectUrls = ['asdd','12341','yandex.ru'];
+        foreach($incorrectUrls as $incorrectUrl) {
+            $response = $this->post(route('domains.store'),['domain'=> ['name' => $incorrectUrl]]);
+            $response->assertRedirect(route('homepage'));
+        }
     }
 
     public function testDomainStoreExistingDomain()
     {
-        $domainName = "https://www.kinopoisk.ru";
-        $response = $this->post(route('domains.store'),['domain'=> ['name' => $domainName]]);
+        $randomExistingDomainName =  DB::table('domains')->inRandomOrder()->first()->name;
+
+        $response = $this->post(route('domains.store'),['domain'=> ['name' => $randomExistingDomainName]]);
         $response->assertRedirect();
 
-        $this->assertDatabaseHas('domains', [
-            'name' => $domainName,
-        ]);
-
         $domainFromDB = DB::table('domains')->select('*')
-            ->where('name','=',$domainName)->get()->toArray()[0];
+            ->where('name','=',$randomExistingDomainName)->get()->toArray()[0];
         $this->assertTrue($domainFromDB->updated_at !== $domainFromDB->created_at);
 
     }
@@ -98,7 +94,7 @@ class DomainsTest extends TestCase
     {
         $body = $this->get(route('domains.index'))->getContent();
         $domains = (DB::table('domains')->get()->toArray());
-
+        dd($domains);
         foreach($domains as $domain) {
             $this->assertStringContainsString($domain->id, $body);
             $this->assertStringContainsString($domain->name, $body);

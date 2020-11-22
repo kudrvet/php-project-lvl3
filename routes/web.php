@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use \Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Validator;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,8 +22,14 @@ Route::get('/', function () {
 })->name('homepage');
 
 Route::post('/', function (Request $request) {
-    $validationData = $request->validate(['domain.name' => 'url']);
 
+    $validator = Validator::make($request->input('domain'), [
+        'name' => 'url']);
+
+    if($validator->fails()) {
+        flash('Invalid URL!')->error();
+        return redirect()->route('homepage')->withInput();
+    }
     $name = $request->input('domain')['name'];
     $nowTime = Carbon::now()->toDateTimeString();
 
@@ -35,9 +41,17 @@ Route::post('/', function (Request $request) {
         'name',['updated_at']
     );
 
+
     $id = DB::table('domains')->select('id')->where('name','=',$normalizedName)->get()->toArray()[0]->id;
 
-    flash('Site Added!')->success();
+    $created_at = DB::table('domains')->select('created_at')->where('id','=',$id)->get()->all()[0]->created_at;
+
+    if ($created_at == $nowTime) {
+        flash('This url is added!')->success();
+    } else {
+        flash('This url is already existed!')->success();
+    }
+
 
     return redirect()->route('domains.show',['id'=> $id]);
 })->name('domains.store');
