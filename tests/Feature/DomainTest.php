@@ -94,7 +94,6 @@ class DomainsTest extends TestCase
     {
         $body = $this->get(route('domains.index'))->getContent();
         $domains = (DB::table('domains')->get()->toArray());
-        dd($domains);
         foreach($domains as $domain) {
             $this->assertStringContainsString($domain->id, $body);
             $this->assertStringContainsString($domain->name, $body);
