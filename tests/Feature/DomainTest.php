@@ -50,7 +50,6 @@ class DomainsTest extends TestCase
     public function testDomainStoreExistingDomain()
     {
         $randomExistingDomainName =  DB::table('domains')->inRandomOrder()->first()->name;
-        print_r($randomExistingDomainName);
         $response = $this->post(route('domains.store'),['domain'=> ['name' => $randomExistingDomainName]]);
         $response->assertRedirect();
 
