@@ -31,6 +31,15 @@ class DomainsTest extends TestCase
     {
         parent::setUp();
         $this->seed(DomainSeeder::class);
+//        DB::table('domains')->insert([
+//            ['http://yandex.ru','2020-11-23 22:38:34','2020-11-23 22:38:34'],
+//            ['http://vc.ru','2020-12-23 22:38:34','2020-12-23 22:38:34'],
+//        ]);
+
+//        Domain::factory()->count(5)->create()->each(function ($domain) {
+//            DomainCheck::factory()->count(3)->create(['domain_id'=>$domain->id]);
+//        });
+
     }
 
     public function testHomepage()
@@ -76,6 +85,7 @@ class DomainsTest extends TestCase
     public function testDomainsShow()
     {
        $randExistingDomain =  DB::table('domains')->inRandomOrder()->first();
+       dd(DB::table('domains')->get());
        $response = $this->get(route('domains.show',$randExistingDomain->id));
        $response->assertStatus(200);
 
