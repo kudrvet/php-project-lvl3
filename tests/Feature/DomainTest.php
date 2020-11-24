@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Domain;
+use App\Models\DomainCheck;
 use Database\Seeders\DomainSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
@@ -10,6 +11,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Arr;
 
+use function PHPUnit\Framework\assertTrue;
 use Tests\TestCase;
 
 class DomainsTest extends TestCase
@@ -38,17 +40,16 @@ class DomainsTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function testDomainStoreInvalidInput()
+    public function testDomainStore()
     {
+        //invalid input
         $incorrectUrls = ['asdd','12341','yandex.ru'];
         foreach($incorrectUrls as $incorrectUrl) {
             $response = $this->post(route('domains.store'),['domain'=> ['name' => $incorrectUrl]]);
             $response->assertRedirect(route('homepage'));
         }
-    }
 
-    public function testDomainStoreExistingDomain()
-    {
+        //existingDomain
         $randomExistingDomainName =  DB::table('domains')->inRandomOrder()->first()->name;
         $response = $this->post(route('domains.store'),['domain'=> ['name' => $randomExistingDomainName]]);
         $response->assertRedirect();
@@ -57,10 +58,7 @@ class DomainsTest extends TestCase
             ->where('name','=',$randomExistingDomainName)->get()->toArray()[0];
         $this->assertTrue($domainFromDB->updated_at !== $domainFromDB->created_at);
 
-    }
-
-    public function testDomainStoreNewDomain()
-    {
+        //newDomain
         $factoryData = Domain::factory()->make()->toArray();
         $factoryName = $factoryData['name'];
 
@@ -70,34 +68,80 @@ class DomainsTest extends TestCase
         $response->assertSessionHasNoErrors();
         $response->assertRedirect();
         $this->assertDatabaseHas('domains', ['name'=> $normalizedName]);
-
     }
+
 
     public function testDomainsShow()
     {
-       $randExistingId =  DB::table('domains')->inRandomOrder()->first()->id;
-       $response = $this->get(route('domains.show',['id'=>$randExistingId]));
+       $randExistingDomain =  DB::table('domains')->inRandomOrder()->first();
+       $response = $this->get(route('domains.show',$randExistingDomain->id));
        $response->assertStatus(200);
 
-       $domain = DB::table('domains')->find($randExistingId);
 
        $body = $response->getContent();
-       $this->assertStringContainsString($domain->id, $body);
-       $this->assertStringContainsString($domain->name, $body);
-       $this->assertStringContainsString($domain->updated_at, $body);
-       $this->assertStringContainsString($domain->created_at, $body);
+
+       $this->assertStringContainsString($randExistingDomain->id, $body);
+       $this->assertStringContainsString($randExistingDomain->name, $body);
+       $this->assertStringContainsString($randExistingDomain->updated_at, $body);
+       $this->assertStringContainsString($randExistingDomain->created_at, $body);
+
+
+       $domainsChecks = DB::table('domain_checks')
+            ->where('domain_id','=',$randExistingDomain->id)
+            ->orderByDesc('created_at')
+            ->get();
+
+       foreach($domainsChecks as $domainCheck) {
+            $this->assertStringContainsString($domainCheck->id, $body);
+            $this->assertStringContainsString($domainCheck->status_code ?? '', $body);
+            $this->assertStringContainsString($domainCheck->h1 ?? '', $body);
+            $this->assertStringContainsString($domainCheck->keywords ?? '', $body);
+            $this->assertStringContainsString($domainCheck->description ?? '', $body);
+            $this->assertStringContainsString($domainCheck->created_at, $body);
+        }
 
     }
 
     public function testDomainsIndex()
     {
+
+        $latestChecks = DB::table('domain_checks')
+            ->select('domain_id','status_code',DB::raw('MAX(created_at) as last_post_created_at'))
+            ->groupBy('domain_id');
+
+        $domainsWithLastCheck = DB::table('domains')
+            ->joinSub($latestChecks, 'latest_checks', function ($join) {
+                $join->on('domains.id', '=', 'latest_checks.domain_id');
+            })
+            ->select('latest_checks.domain_id','domains.name','latest_checks.status_code','latest_checks.last_post_created_at')
+            ->get();
+
         $body = $this->get(route('domains.index'))->getContent();
-        $domains = (DB::table('domains')->get()->toArray());
-        foreach($domains as $domain) {
-            $this->assertStringContainsString($domain->id, $body);
+        foreach($domainsWithLastCheck as $domain) {
+            $this->assertStringContainsString($domain->domain_id, $body);
             $this->assertStringContainsString($domain->name, $body);
-            $this->assertStringContainsString($domain->updated_at, $body);
-            $this->assertStringContainsString($domain->created_at, $body);
+            $this->assertStringContainsString($domain->last_post_created_at, $body);
+            $this->assertStringContainsString($domain->status_code ?? '', $body);
         }
+    }
+
+    public function testDomainsCheck()
+    {
+        $randExistingDomainCheck =  DB::table('domain_checks')->inRandomOrder()->first();
+        $domainChecksCount= DB::table('domain_checks')
+            ->select()
+            ->where('domain_id','=',$randExistingDomainCheck->domain_id)
+            ->count();
+
+        $response = $this->post(route('domains.check', $randExistingDomainCheck->domain_id));
+        $response->assertRedirect();
+
+        $updatedDomainChecksCount= DB::table('domain_checks')
+            ->select()
+            ->where('domain_id','=',$randExistingDomainCheck->domain_id)
+            ->count();
+
+        assertTrue($updatedDomainChecksCount === $domainChecksCount + 1);
+
     }
 }

@@ -31,7 +31,7 @@ Route::post('/', function (Request $request) {
         return redirect()->route('homepage')->withInput();
     }
     $name = $request->input('domain')['name'];
-    $nowTime = Carbon::now()->toDateTimeString();
+    $nowTime = Carbon::now('Europe/Moscow')->toDateTimeString();
 
     $urlParts = parse_url($name);
     $normalizedName="{$urlParts['scheme']}://{$urlParts['host']}";
@@ -58,19 +58,40 @@ Route::post('/', function (Request $request) {
 
 Route::get('/domains/{id}', function ($id) {
 
-    $domain = DB::table('domains')->where('id','=',$id)->get()->toArray();
+    $domain = DB::table('domains')->where('id','=',$id)->get()->all();
+
     if(empty($domain)) {
         abort(404);
     }
 
-    return view('domains_show',['domain' => $domain[0]]);
+    $domainsChecks = DB::table('domain_checks')
+        ->where('domain_id','=',$id)->orderByDesc('created_at')->get();
+
+    return view('domains_show',['domain' => $domain[0], 'domainsChecks' => $domainsChecks]);
 })->name('domains.show');
 
 Route::get('/domains', function () {
 
-    $domains = DB::table('domains')->orderBy('id')->get();
+    $latestChecks = DB::table('domain_checks')
+        ->select('domain_id','status_code',DB::raw('MAX(created_at) as last_post_created_at'))
+        ->groupBy('domain_id');
 
-    return view('domains_index',['domains' => $domains]);
+    $domainsWithLastCheck = DB::table('domains')
+        ->joinSub($latestChecks, 'latest_checks', function ($join) {
+            $join->on('domains.id', '=', 'latest_checks.domain_id');
+        })
+        ->select('latest_checks.domain_id','domains.name','latest_checks.status_code','latest_checks.last_post_created_at')
+        ->get();
+
+    return view('domains_index',['domains' => $domainsWithLastCheck]);
 
 })->name('domains.index');
 
+Route::post('/domains/{id}/checks', function ($id) {
+
+    $nowTime = Carbon::now('Europe/Moscow')->toDateTimeString();
+    DB::table('domain_checks')->insert(['domain_id' => $id,
+        'created_at' => $nowTime, 'updated_at' => $nowTime]);
+
+    return redirect(route('domains.show',['id' => $id]));
+})->name('domains.check');
