@@ -4,6 +4,6 @@
     {{Form::open(['route' => 'domains.store'])}}
     {{Form::text('domain[name]')}}
     {{Form::submit('Check!')}}
-{{Form::close()}}
+    {{Form::close()}}
 
 @endsection

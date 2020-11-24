@@ -3,20 +3,20 @@
 <table class="table table-bordered">
     <thead>
     <tr>
-        <th>id</th>
+        <th>ID</th>
         <th>Name</th>
-        <th>Created_at</th>
-        <th>Updated_at</th>
+        <th>Last Check</th>
+        <th>Status Code</th>
 
     </tr>
     </thead>
     <tbody>
     @foreach($domains as $domain)
     <tr>
-        <td>{{$domain->id}}</td>
-        <td>{{ link_to_route('domains.show',$title = $domain->name, $parameters = ['id' => $domain->id], $attributes = [])}}</td>
-        <td>{{$domain->created_at}}</td>
-        <td>{{$domain->updated_at}}</td>
+        <td>{{$domain->domain_id}}</td>
+        <td>{{ link_to_route('domains.show',$title = $domain->name, $parameters = ['id' => $domain->domain_id], $attributes = [])}}</td>
+        <td>{{$domain->last_post_created_at}}</td>
+        <td>{{$domain->status_code}}</td>
     </tr>
     @endforeach
     </tbody>
