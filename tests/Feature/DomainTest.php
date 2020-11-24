@@ -116,13 +116,26 @@ class DomainsTest extends TestCase
             ->select('latest_checks.domain_id','domains.name','latest_checks.status_code','latest_checks.last_post_created_at')
             ->get();
 
-        $body = $this->get(route('domains.index'))->getContent();
+//        $body = $this->get(route('domains.index'))->getContent();
+//        foreach($domainsWithLastCheck as $domain) {
+//            $this->assertStringContainsString($domain->domain_id, $body);
+//            $this->assertStringContainsString($domain->name, $body);
+//            $this->assertStringContainsString($domain->last_post_created_at, $body);
+//            $this->assertStringContainsString($domain->status_code ?? '', $body);
+//        }
+
+        $response = $this->get(route('domains.index'));
+
         foreach($domainsWithLastCheck as $domain) {
-            $this->assertStringContainsString($domain->domain_id, $body);
-            $this->assertStringContainsString($domain->name, $body);
-            $this->assertStringContainsString($domain->last_post_created_at, $body);
-            $this->assertStringContainsString($domain->status_code ?? '', $body);
+            $response->assertSee($domain->domain_id);
+            $response->assertSee($domain->name);
+            $response->assertSee($domain->last_post_created_at);
+            $response->assertSee($domain->status_code ?? '');
         }
+
+
+
+
     }
 
     public function testDomainsCheck()
