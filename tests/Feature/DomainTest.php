@@ -60,7 +60,7 @@ class DomainsTest extends TestCase
 
         //existingDomain
         $randomExistingDomainName =  DB::table('domains')->inRandomOrder()->first()->name;
-        print_r("sos");
+        dd(DB::table('domains')->get());
         print_r($randomExistingDomainName);
         $response = $this->post(route('domains.store'),['domain'=> ['name' => $randomExistingDomainName]]);
         $response->assertRedirect();
@@ -85,7 +85,6 @@ class DomainsTest extends TestCase
     public function testDomainsShow()
     {
        $randExistingDomain =  DB::table('domains')->inRandomOrder()->first();
-       dd(DB::table('domains')->get());
        $response = $this->get(route('domains.show',$randExistingDomain->id));
        $response->assertStatus(200);
 
