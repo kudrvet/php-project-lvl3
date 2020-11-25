@@ -30,30 +30,28 @@ Route::post('/', function (Request $request) {
         flash('Invalid URL!')->error();
         return redirect()->route('homepage')->withInput();
     }
+
     $name = $request->input('domain')['name'];
+    $normalizedName = normalizeUrl($name);
+
     $nowTime = Carbon::now('Europe/Moscow')->toDateTimeString();
 
-    $urlParts = parse_url($name);
-    $normalizedName="{$urlParts['scheme']}://{$urlParts['host']}";
+    $domainFromDB = DB::table('domains')->select()
+        ->where('name','=',$normalizedName)
+        ->get()->toArray();
 
-    DB::table('domains')->upsert(
-        ['name' => $normalizedName, 'created_at' => $nowTime, 'updated_at' => $nowTime],
-        'name',['updated_at']
-    );
+    if(empty($domainFromDB)) {
+        $id = DB::table('domains')->insertGetId(
+            ['name' => $normalizedName, 'created_at' => $nowTime, 'updated_at' => $nowTime]
+        );
 
-
-    $id = DB::table('domains')->select('id')->where('name','=',$normalizedName)->get()->toArray()[0]->id;
-
-    $created_at = DB::table('domains')->select('created_at')->where('id','=',$id)->get()->all()[0]->created_at;
-
-    if ($created_at == $nowTime) {
         flash('This url is added!')->success();
-    } else {
-        flash('This url is already existed!')->success();
+        return redirect()->route('domains.show',['id'=> $id]);
     }
 
+    flash('This url is existed!')->success();
+    return redirect()->route('domains.show',['id'=> $domainFromDB[0]->id]);
 
-    return redirect()->route('domains.show',['id'=> $id]);
 })->name('domains.store');
 
 Route::get('/domains/{id}', function ($id) {
@@ -72,6 +70,7 @@ Route::get('/domains/{id}', function ($id) {
 
 Route::get('/domains', function () {
 
+    //бага - если не сделал ни одного чека, то выводится пустая таблица, а нужно с пустой строкой в ласт чек
     $latestChecks = DB::table('domain_checks')
         ->select('domain_id','status_code',DB::raw('MAX(created_at) as last_post_created_at'))
         ->groupBy('domain_id');
@@ -82,7 +81,7 @@ Route::get('/domains', function () {
         })
         ->select('latest_checks.domain_id','domains.name','latest_checks.status_code','latest_checks.last_post_created_at')
         ->get();
-
+//    dd($domainsWithLastCheck);
     return view('domains_index',['domains' => $domainsWithLastCheck]);
 
 })->name('domains.index');

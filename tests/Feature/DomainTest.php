@@ -51,36 +51,18 @@ class DomainsTest extends TestCase
 
     public function testDomainStore()
     {
-        //invalid input
-        $incorrectUrls = ['asdd','12341','yandex.ru'];
-        foreach($incorrectUrls as $incorrectUrl) {
-            $response = $this->post(route('domains.store'),['domain'=> ['name' => $incorrectUrl]]);
-            $response->assertRedirect(route('homepage'));
-        }
+        $incorrectUrl = 'asdd';
+        $response = $this->post(route('domains.store'),['domain'=> ['name' => $incorrectUrl]]);
+        $response->assertRedirect(route('homepage'));
 
-        //existingDomain
-//        $randomExistingDomainName =  DB::table('domains')->inRandomOrder()->first()->name;
-//        dd(DB::table('domains')->get());
-//        print_r($randomExistingDomainName);
-//        $response = $this->post(route('domains.store'),['domain'=> ['name' => $randomExistingDomainName]]);
-//        $response->assertRedirect();
-//
-//        $domainFromDB = DB::table('domains')->select('*')
-//            ->where('name','=',$randomExistingDomainName)->get()->toArray()[0];
-//        $this->assertTrue($domainFromDB->updated_at !== $domainFromDB->created_at);
+        $domainData = ['name' => 'https://example@gmail.com'];
 
-        //newDomain
-        $factoryData = Domain::factory()->make()->toArray();
-        $factoryName = $factoryData['name'];
-
-        $response = $this->post(route('domains.store'),['domain'=> ['name' => $factoryName]]);
-        $urlParts = parse_url($factoryName);
-        $normalizedName="{$urlParts['scheme']}://{$urlParts['host']}";
+        $response = $this->post(route('domains.store'),['domain'=> $domainData]);
         $response->assertSessionHasNoErrors();
         $response->assertRedirect();
-        $this->assertDatabaseHas('domains', ['name'=> $normalizedName]);
+        $normalizedDomainData = ['name' => normalizeUrl($domainData['name'])];
+        $this->assertDatabaseHas('domains', $normalizedDomainData);
     }
-
 
     public function testDomainsShow()
     {
@@ -88,14 +70,9 @@ class DomainsTest extends TestCase
        $response = $this->get(route('domains.show',$randExistingDomain->id));
        $response->assertStatus(200);
 
-
-       $body = $response->getContent();
-
-       $this->assertStringContainsString($randExistingDomain->id, $body);
-       $this->assertStringContainsString($randExistingDomain->name, $body);
-       $this->assertStringContainsString($randExistingDomain->updated_at, $body);
-       $this->assertStringContainsString($randExistingDomain->created_at, $body);
-
+       $response->assertSee($randExistingDomain->id);
+       $response->assertSee($randExistingDomain->name);
+       $response->assertSee($randExistingDomain->updated_at);$response->assertSee($randExistingDomain->created_at);
 
        $domainsChecks = DB::table('domain_checks')
             ->where('domain_id','=',$randExistingDomain->id)
@@ -103,14 +80,13 @@ class DomainsTest extends TestCase
             ->get();
 
        foreach($domainsChecks as $domainCheck) {
-            $this->assertStringContainsString($domainCheck->id, $body);
-            $this->assertStringContainsString($domainCheck->status_code ?? '', $body);
-            $this->assertStringContainsString($domainCheck->h1 ?? '', $body);
-            $this->assertStringContainsString($domainCheck->keywords ?? '', $body);
-            $this->assertStringContainsString($domainCheck->description ?? '', $body);
-            $this->assertStringContainsString($domainCheck->created_at, $body);
+           $response->assertSee($domainCheck->id);
+           $response->assertSee($domainCheck->status_code );
+           $response->assertSee($domainCheck->h1);
+           $response->assertSee($domainCheck->keywords);
+           $response->assertSee($domainCheck->description);
+           $response->assertSee($domainCheck->created_at);
         }
-
     }
 
     public function testDomainsIndex()
@@ -127,14 +103,6 @@ class DomainsTest extends TestCase
             ->select('latest_checks.domain_id','domains.name','latest_checks.status_code','latest_checks.last_post_created_at')
             ->get();
 
-//        $body = $this->get(route('domains.index'))->getContent();
-//        foreach($domainsWithLastCheck as $domain) {
-//            $this->assertStringContainsString($domain->domain_id, $body);
-//            $this->assertStringContainsString($domain->name, $body);
-//            $this->assertStringContainsString($domain->last_post_created_at, $body);
-//            $this->assertStringContainsString($domain->status_code ?? '', $body);
-//        }
-
         $response = $this->get(route('domains.index'));
 
         foreach($domainsWithLastCheck as $domain) {
@@ -143,9 +111,6 @@ class DomainsTest extends TestCase
             $response->assertSee($domain->last_post_created_at);
             $response->assertSee($domain->status_code ?? '');
         }
-
-
-
 
     }
 
