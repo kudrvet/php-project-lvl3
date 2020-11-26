@@ -76,10 +76,10 @@ Route::get('/domains', function () {
         ->groupBy('domain_id');
 
     $domainsWithLastCheck = DB::table('domains')
-        ->joinSub($latestChecks, 'latest_checks', function ($join) {
+        ->leftjoinSub($latestChecks, 'latest_checks', function ($join) {
             $join->on('domains.id', '=', 'latest_checks.domain_id');
         })
-        ->select('latest_checks.domain_id','domains.name','latest_checks.status_code','latest_checks.last_post_created_at')
+        ->select('domains.id','domains.name','latest_checks.status_code','latest_checks.last_post_created_at')
         ->get();
 //    dd($domainsWithLastCheck);
     return view('domains_index',['domains' => $domainsWithLastCheck]);

@@ -13,8 +13,8 @@
     <tbody>
     @foreach($domains as $domain)
     <tr>
-        <td>{{$domain->domain_id}}</td>
-        <td>{{ link_to_route('domains.show',$title = $domain->name, $parameters = ['id' => $domain->domain_id], $attributes = [])}}</td>
+        <td>{{$domain->id}}</td>
+        <td>{{ link_to_route('domains.show',$title = $domain->name, $parameters = ['id' => $domain->id], $attributes = [])}}</td>
         <td>{{$domain->last_post_created_at}}</td>
         <td>{{$domain->status_code}}</td>
     </tr>

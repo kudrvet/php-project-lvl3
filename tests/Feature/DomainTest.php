@@ -100,13 +100,13 @@ class DomainsTest extends TestCase
             ->joinSub($latestChecks, 'latest_checks', function ($join) {
                 $join->on('domains.id', '=', 'latest_checks.domain_id');
             })
-            ->select('latest_checks.domain_id','domains.name','latest_checks.status_code','latest_checks.last_post_created_at')
+            ->select('domains.id','domains.name','latest_checks.status_code','latest_checks.last_post_created_at')
             ->get();
 
         $response = $this->get(route('domains.index'));
 
         foreach($domainsWithLastCheck as $domain) {
-            $response->assertSee($domain->domain_id);
+            $response->assertSee($domain->id);
             $response->assertSee($domain->name);
             $response->assertSee($domain->last_post_created_at);
             $response->assertSee($domain->status_code ?? '');
