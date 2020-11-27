@@ -20,15 +20,8 @@ log:
 test:
 	php artisan test
 
-test-coverage-composer:
-	composer exec --verbose phpunit -- --coverage-clover build/logs/clover.xml
-
 test-coverage:
-	php artisan test --coverage-clover logs/coverage/clover.xml
-
-push-local-coverage:
-	./test-reporter format-coverage -t clover logs/coverage/clover.xml
-	./test-reporter upload-coverage
+	composer exec --verbose phpunit -- --coverage-clover build/logs/clover.xml
 
 deploy:
 	git push heroku
