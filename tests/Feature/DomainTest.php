@@ -54,6 +54,7 @@ class DomainsTest extends TestCase
         $incorrectUrl = 'asdd';
         $response = $this->post(route('domains.store'),['domain'=> ['name' => $incorrectUrl]]);
         $response->assertRedirect(route('homepage'));
+        $response->assertSessionHasErrors();
 
         $domainData = ['name' => 'https://example@gmail.com'];
 
@@ -91,16 +92,24 @@ class DomainsTest extends TestCase
 
     public function testDomainsIndex()
     {
-         $latestChecks = DB::table('domain_checks')
-             ->select('domain_id','status_code',DB::raw('MAX(created_at) as last_post_created_at'))
-             ->groupBy('domain_id');
 
-         $domainsWithLastCheck = DB::table('domains')
-             ->joinSub($latestChecks, 'latest_checks', function ($join) {
-                 $join->on('domains.id', '=', 'latest_checks.domain_id');
-             })
-             ->select('domains.id','domains.name','latest_checks.status_code','latest_checks.last_post_created_at')
-             ->get();
+
+        $latestChecks = DB::table('domain_checks')
+            ->select('domain_id',DB::raw('MAX(created_at) as last_post_created_at'))
+            ->groupBy('domain_id');
+
+        $lastChecksWithStatus = DB::table('domain_checks')
+            ->JoinSub($latestChecks,'latest_checks', function($join) {
+                $join->on('domain_checks.created_at','=','latest_checks.last_post_created_at');
+            })
+            ->select('latest_checks.domain_id','latest_checks.last_post_created_at','domain_checks.status_code');
+
+        $domainsWithLastCheck = DB::table('domains')
+            ->leftjoinSub($lastChecksWithStatus, 'latest_checks', function ($join) {
+                $join->on('domains.id', '=', 'latest_checks.domain_id');
+            })
+            ->select('domains.id','domains.name','latest_checks.status_code','latest_checks.last_post_created_at')
+            ->get();
 
          $response = $this->get(route('domains.index'));
 
@@ -114,18 +123,19 @@ class DomainsTest extends TestCase
 
     public function testDomainsCheck()
     {
-        $randExistingDomainCheck =  DB::table('domain_checks')->inRandomOrder()->first();
+        $randExistingDomainId =  DB::table('domains')->inRandomOrder()->first()->id;
+
         $domainChecksCount= DB::table('domain_checks')
             ->select()
-            ->where('domain_id','=',$randExistingDomainCheck->domain_id)
+            ->where('domain_id','=',$randExistingDomainId)
             ->count();
 
-        $response = $this->post(route('domains.check', $randExistingDomainCheck->domain_id));
+        $response = $this->post(route('domains.check', $randExistingDomainId));
         $response->assertRedirect();
 
         $updatedDomainChecksCount= DB::table('domain_checks')
             ->select()
-            ->where('domain_id','=',$randExistingDomainCheck->domain_id)
+            ->where('domain_id','=',$randExistingDomainId)
             ->count();
 
         assertTrue($updatedDomainChecksCount === $domainChecksCount + 1);

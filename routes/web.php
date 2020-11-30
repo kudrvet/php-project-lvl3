@@ -28,7 +28,8 @@ Route::post('/', function (Request $request) {
 
     if($validator->fails()) {
         flash('Invalid URL!')->error();
-        return redirect()->route('homepage')->withInput();
+//        $validator->errors()->add('field','Not url!');
+        return redirect()->route('homepage')->withInput()->withErrors($validator);
     }
 
     $name = $request->input('domain')['name'];

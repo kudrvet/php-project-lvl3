@@ -5,5 +5,4 @@
     {{Form::text('domain[name]')}}
     {{Form::submit('Check!')}}
     {{Form::close()}}
-
 @endsection
