@@ -98,45 +98,39 @@ Route::get('/domains', function () {
 Route::post('/domains/{id}/checks', function ($id) {
 
     $nowTime = Carbon::now('Europe/Moscow')->toDateTimeString();
-//    dd(DB::table('domains')->get());
     $domainName = DB::table('domains')
         ->select('name')
         ->where('id','=',$id)
         ->get()[0]->name;
-//    dd($domainName);
+
     $response = Http::get($domainName);
     $status_code = $response->status();
+    if ($status_code == 404) {
+        flash('This domain is not available')->error();
+        return redirect()->back();
+    }
 
-    $parsedHtml = new DiDom\Document($domainName,true);
-//      $parsedHtml = new Document();
-//      $parsedHtml->loadHtmlFile($domainName.'/');
-//    dd($parsedHtml);
+    $parsedHtml = new DiDom\Document($response->body());
 
     $h1Tags = $parsedHtml->find('h1');
-
     $formattedH1Tags= array_map(function($tag) {
         return $tag->text();
     },$h1Tags);
 
     $keyWordsTagDom = $parsedHtml->find('[name="keywords"]');
-    if(isset($keyWordsTagDom[0])) {
-        $keywords =  optional($keyWordsTagDom[0])->getAttribute('content');
-    }
+    $keywords =  isset($keyWordsTagDom[0]) ? optional($keyWordsTagDom[0])->getAttribute('content') : null;
 
     $descriptionTagDom = $parsedHtml->find('[name="description"]');
-    if(isset($descriptionTagDom[0])) {
-        $description = optional($descriptionTagDom[0])->getAttribute('content');
-    }
-//    dd($formattedH1Tags);
-//    $h1String = implode("",$formattedH1Tags);
-//    dd($h1String);
+    $description = isset($keyWordsTagDom[0]) ? optional($descriptionTagDom[0])->getAttribute('content') : null;
+
     DB::table('domain_checks')
         ->insert(['domain_id' => $id,
         'status_code' => $status_code,
         'h1' => implode("",$formattedH1Tags),
-        'keywords' => $keywords ?? null,
-        'description' => $description ?? null,
+        'keywords' => $keywords,
+        'description' => $description,
         'created_at' => $nowTime, 'updated_at' => $nowTime]);
 
     return redirect(route('domains.show',['id' => $id]));
+
 })->name('domains.check');

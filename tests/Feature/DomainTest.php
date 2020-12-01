@@ -62,7 +62,7 @@ class DomainsTest extends TestCase
         $response->assertSessionHasNoErrors();
         $response->assertRedirect();
         $normalizedDomainData = ['name' => normalizeUrl($domainData['name'])];
-        $this->assertDatabaseHas('domains', $normalizedDomainData);
+        $this->assertDatabaseHas('domains', ['name' => $normalizedDomainData]);
     }
 
     public function testDomainsShow()
@@ -73,7 +73,8 @@ class DomainsTest extends TestCase
 
        $response->assertSee($randExistingDomain->id);
        $response->assertSee($randExistingDomain->name);
-       $response->assertSee($randExistingDomain->updated_at);$response->assertSee($randExistingDomain->created_at);
+       $response->assertSee($randExistingDomain->updated_at);
+       $response->assertSee($randExistingDomain->created_at);
 
        $domainsChecks = DB::table('domain_checks')
             ->where('domain_id','=',$randExistingDomain->id)
@@ -92,7 +93,6 @@ class DomainsTest extends TestCase
 
     public function testDomainsIndex()
     {
-
 
         $latestChecks = DB::table('domain_checks')
             ->select('domain_id',DB::raw('MAX(created_at) as last_post_created_at'))
@@ -118,37 +118,27 @@ class DomainsTest extends TestCase
              $response->assertSee($domain->name);
              $response->assertSee($domain->status_code);
              $response->assertSee($domain->last_post_created_at);
-             $response->assertSee($domain->status_code ?? '');
          }
     }
 
     public function testDomainsCheck()
     {
         $randExistingDomain =  DB::table('domains')->inRandomOrder()->first();
-
-        $domainChecksCount= DB::table('domain_checks')
-            ->select()
-            ->where('domain_id','=',$randExistingDomain->id)
-            ->count();
-
-
-        Http::fake();
-
         $id = $randExistingDomain->id;
-        $response = $this->post(route('domains.check', $id));
-        $response->assertRedirect();
 
-        $updatedDomainChecksCount= DB::table('domain_checks')
-            ->select()
-            ->where('domain_id','=',$randExistingDomain->id)
-            ->count();
-
-        assertTrue($updatedDomainChecksCount === $domainChecksCount + 1);
-
-        $this->assertDatabaseHas('domain_checks', [
-            'domain_id' => $id,
+        $fakeHtml = file_get_contents(realpath(implode(DIRECTORY_SEPARATOR,[__DIR__,'..','fixtures','testHtml.html'])));
+        $domainData = [
+            'domain_id'=>$id,
             'status_code' => 200,
-        ]);
+            'keywords'=> 'keyword1 keyword2',
+            'description' => 'This is test description',
+        ];
 
+        Http::fake([$randExistingDomain->name => Http::response($fakeHtml,200)]);
+
+        $response = $this->post(route('domains.check', $id));
+
+        $response->assertRedirect(route('domains.show',['id' => $randExistingDomain->id]));
+        $this->assertDatabaseHas('domain_checks', $domainData);
     }
 }
