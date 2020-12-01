@@ -5,7 +5,7 @@ namespace Database\Factories;
 use App\Models\DomainCheck;
 use App\Models\Domain;
 use Illuminate\Database\Eloquent\Factories\Factory;
-
+use Faker\Generator as Faker;
 class DomainCheckFactory extends Factory
 {
     /**
@@ -26,6 +26,7 @@ class DomainCheckFactory extends Factory
 
         return [
             'domain_id' => Domain::factory(),
+            'status_code' =>$this->faker->randomElement([200,302,404]),
             'updated_at' => $randomDateTime,
             'created_at'=> $randomDateTime,
         ];

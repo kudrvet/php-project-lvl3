@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Arr;
-
+use Illuminate\Support\Facades\Http;
 use function PHPUnit\Framework\assertTrue;
 use Tests\TestCase;
 
@@ -82,7 +82,7 @@ class DomainsTest extends TestCase
 
        foreach($domainsChecks as $domainCheck) {
            $response->assertSee($domainCheck->id);
-           $response->assertSee($domainCheck->status_code );
+           $response->assertSee($domainCheck->status_code);
            $response->assertSee($domainCheck->h1);
            $response->assertSee($domainCheck->keywords);
            $response->assertSee($domainCheck->description);
@@ -116,6 +116,7 @@ class DomainsTest extends TestCase
          foreach($domainsWithLastCheck as $domain) {
              $response->assertSee($domain->id);
              $response->assertSee($domain->name);
+             $response->assertSee($domain->status_code);
              $response->assertSee($domain->last_post_created_at);
              $response->assertSee($domain->status_code ?? '');
          }
@@ -123,22 +124,31 @@ class DomainsTest extends TestCase
 
     public function testDomainsCheck()
     {
-        $randExistingDomainId =  DB::table('domains')->inRandomOrder()->first()->id;
+        $randExistingDomain =  DB::table('domains')->inRandomOrder()->first();
 
         $domainChecksCount= DB::table('domain_checks')
             ->select()
-            ->where('domain_id','=',$randExistingDomainId)
+            ->where('domain_id','=',$randExistingDomain->id)
             ->count();
 
-        $response = $this->post(route('domains.check', $randExistingDomainId));
+
+        Http::fake();
+
+        $id = $randExistingDomain->id;
+        $response = $this->post(route('domains.check', $id));
         $response->assertRedirect();
 
         $updatedDomainChecksCount= DB::table('domain_checks')
             ->select()
-            ->where('domain_id','=',$randExistingDomainId)
+            ->where('domain_id','=',$randExistingDomain->id)
             ->count();
 
         assertTrue($updatedDomainChecksCount === $domainChecksCount + 1);
+
+        $this->assertDatabaseHas('domain_checks', [
+            'domain_id' => $id,
+            'status_code' => 200,
+        ]);
 
     }
 }

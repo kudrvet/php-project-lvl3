@@ -5,6 +5,8 @@ use \Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Http;
+use DiDom\Document;
 
 /*
 |--------------------------------------------------------------------------
@@ -96,7 +98,44 @@ Route::get('/domains', function () {
 Route::post('/domains/{id}/checks', function ($id) {
 
     $nowTime = Carbon::now('Europe/Moscow')->toDateTimeString();
-    DB::table('domain_checks')->insert(['domain_id' => $id,
+//    dd(DB::table('domains')->get());
+    $domainName = DB::table('domains')
+        ->select('name')
+        ->where('id','=',$id)
+        ->get()[0]->name;
+//    dd($domainName);
+    $response = Http::get($domainName);
+    $status_code = $response->status();
+
+    $parsedHtml = new DiDom\Document($domainName,true);
+//      $parsedHtml = new Document();
+//      $parsedHtml->loadHtmlFile($domainName.'/');
+//    dd($parsedHtml);
+
+    $h1Tags = $parsedHtml->find('h1');
+
+    $formattedH1Tags= array_map(function($tag) {
+        return $tag->text();
+    },$h1Tags);
+
+    $keyWordsTagDom = $parsedHtml->find('[name="keywords"]');
+    if(isset($keyWordsTagDom[0])) {
+        $keywords =  optional($keyWordsTagDom[0])->getAttribute('content');
+    }
+
+    $descriptionTagDom = $parsedHtml->find('[name="description"]');
+    if(isset($descriptionTagDom[0])) {
+        $description = optional($descriptionTagDom[0])->getAttribute('content');
+    }
+//    dd($formattedH1Tags);
+//    $h1String = implode("",$formattedH1Tags);
+//    dd($h1String);
+    DB::table('domain_checks')
+        ->insert(['domain_id' => $id,
+        'status_code' => $status_code,
+        'h1' => implode("",$formattedH1Tags),
+        'keywords' => $keywords ?? null,
+        'description' => $description ?? null,
         'created_at' => $nowTime, 'updated_at' => $nowTime]);
 
     return redirect(route('domains.show',['id' => $id]));
