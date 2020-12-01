@@ -30,7 +30,6 @@ Route::post('/', function (Request $request) {
 
     if($validator->fails()) {
         flash('Invalid URL!')->error();
-//        $validator->errors()->add('field','Not url!');
         return redirect()->route('homepage')->withInput()->withErrors($validator);
     }
 
@@ -80,7 +79,6 @@ Route::get('/domains', function () {
     $lastChecksWithStatus = DB::table('domain_checks')
         ->JoinSub($latestChecks,'latest_checks', function($join) {
             $join->on('domain_checks.created_at','=','latest_checks.last_post_created_at');
-//            ->where('domain_checks.domain_id','=','latest_checks.domain_id');
         })
         ->select('latest_checks.domain_id','latest_checks.last_post_created_at','domain_checks.status_code');
 
