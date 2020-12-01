@@ -126,7 +126,7 @@ class DomainsTest extends TestCase
         $randExistingDomain =  DB::table('domains')->inRandomOrder()->first();
         $id = $randExistingDomain->id;
 
-        $fakeHtml = file_get_contents(realpath(implode(DIRECTORY_SEPARATOR,[__DIR__,'..','fixtures','testHtml.html'])));
+        $fakeHtml = file_get_contents(realpath(implode(DIRECTORY_SEPARATOR,[__DIR__,'..','fixtures','test.html'])));
         $domainData = [
             'domain_id'=>$id,
             'status_code' => 200,
