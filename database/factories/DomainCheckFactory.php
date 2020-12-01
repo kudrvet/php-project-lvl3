@@ -26,7 +26,9 @@ class DomainCheckFactory extends Factory
 
         return [
             'domain_id' => Domain::factory(),
-            'status_code' =>$this->faker->randomElement([200,302,404]),
+            'status_code' =>$this->faker->randomElement([200,302,null]),
+            'keywords' => $this->faker->text(),
+            'description' => $this->faker->text(),
             'updated_at' => $randomDateTime,
             'created_at'=> $randomDateTime,
         ];

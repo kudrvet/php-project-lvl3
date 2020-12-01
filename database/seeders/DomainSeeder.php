@@ -16,9 +16,8 @@ class DomainSeeder extends Seeder
      */
     public function run()
     {
-
-        Domain::factory()->count(5)->create()->each(function ($domain) {
-        DomainCheck::factory()->count(3)->create(['domain_id'=>$domain->id]);
+        Domain::factory()->count(3)->create()->each(function ($domain) {
+            DomainCheck::factory()->count(1)->create(['domain_id'=>$domain->id]);
         });
     }
 }

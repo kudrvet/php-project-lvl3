@@ -9,6 +9,10 @@ class DomainCheck extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'domain_id',
+        'status_code',
+        'keywords',
+        'description',
         'updated_at',
         'created_at',
     ];
