@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class DomainCheck extends Model
 {
     use HasFactory;
+
     protected $fillable = [
         'domain_id',
         'status_code',

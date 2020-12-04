@@ -26,7 +26,7 @@ class DomainFactory extends Factory
         return [
             'name' => "http://{$this->faker->unique()->domainName}",
             'updated_at' => $randomDateTime,
-            'created_at'=> $randomDateTime,
+            'created_at' => $randomDateTime,
         ];
     }
 }
