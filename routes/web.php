@@ -72,8 +72,8 @@ Route::get('/domains/{id}', function ($id) {
 Route::get('/domains', function () {
 
     $lastChecksWithStatus = DB::table('domain_checks')
-        ->select('domain_id','status_code', DB::raw('MAX(created_at) as last_post_created_at'))
-        ->groupBy('domain_id','status_code');
+        ->select('domain_id', 'status_code', DB::raw('MAX(created_at) as last_post_created_at'))
+        ->groupBy('domain_id', 'status_code');
 
     $domainsWithLastCheck = DB::table('domains')
         ->leftjoinSub($lastChecksWithStatus, 'latest_checks', function ($join) {
@@ -91,7 +91,7 @@ Route::post('/domains/{id}/checks', function ($id) {
 
     try {
         $domainName = DB::table('domains')
-         ->find($id,['name'])->name;
+         ->find($id, ['name'])->name;
         $response = Http::get($domainName);
         $status_code = $response->status();
         $parsedHtml = new DiDom\Document($response->body());
@@ -113,9 +113,7 @@ Route::post('/domains/{id}/checks', function ($id) {
              'keywords' => $keywords,
              'description' => $description,
              'created_at' => $nowTime, 'updated_at' => $nowTime]);
-    }
-
-    catch (Exception $e) {
+    } catch (Exception $e) {
         flash('Something go wrong!')->error();
     }
 
