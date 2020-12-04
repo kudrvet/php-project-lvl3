@@ -31,4 +31,4 @@ lint:
 	composer run-script phpcs
 
 lint-fix:
-	composer phpcbf
+	composer run-script phpcbf

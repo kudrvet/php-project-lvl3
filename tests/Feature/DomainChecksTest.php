@@ -15,30 +15,32 @@ class DomainChecksTest extends TestCase
      * @return void
      *
      */
+    protected $domainId;
+    protected $domainData;
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(DomainSeeder::class);
+        $dataStamp = '2020-12-04 19:11:54';
+        $this->domainData = ['name' => 'https://www.example.ru','updated_at' => $dataStamp, 'created_at' => $dataStamp];
+        $this->domainId = DB::table('domains')->insertGetId($this->domainData);
     }
 
     public function testDomainsCheck()
     {
-        $randExistingDomain =  DB::table('domains')->inRandomOrder()->first();
-        $id = $randExistingDomain->id;
 
         $fakeHtml = file_get_contents(realpath(implode(DIRECTORY_SEPARATOR, [__DIR__,'..','fixtures','test.html'])));
         $domainData = [
-            'domain_id' => $id,
+            'domain_id' => $this->domainId,
             'status_code' => 200,
             'keywords' => 'keyword1 keyword2',
             'description' => 'This is test description',
         ];
 
-        Http::fake([$randExistingDomain->name => Http::response($fakeHtml, 200)]);
+        Http::fake([$this->domainData['name'] => Http::response($fakeHtml, 200)]);
 
-        $response = $this->post(route('domains.check', $id));
+        $response = $this->post(route('domains.check', $this->domainId));
 
-        $response->assertRedirect(route('domains.show', ['id' => $randExistingDomain->id]));
+        $response->assertRedirect(route('domains.show', ['id' => $this->domainId]));
         $this->assertDatabaseHas('domain_checks', $domainData);
     }
 }

@@ -15,11 +15,15 @@ class DomainsTest extends TestCase
      * @return void
      *
      */
+    protected $domainId;
+    protected $domainData;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(DomainSeeder::class);
+        $dataStamp = '2020-12-04 19:11:54';
+        $this->domainData = ['name' => 'https://www.example.ru','updated_at' => $dataStamp, 'created_at' => $dataStamp];
+        $this->domainId = DB::table('domains')->insertGetId($this->domainData);
     }
 
     public function testHomepage()
@@ -47,11 +51,9 @@ class DomainsTest extends TestCase
 
     public function testDomainsShow()
     {
-        $randExistingDomain =  DB::table('domains')->inRandomOrder()->first();
-        $response = $this->get(route('domains.show', $randExistingDomain->id));
+        $response = $this->get(route('domains.show', $this->domainId));
         $response->assertStatus(200);
-
-        $response->assertSee($randExistingDomain->name);
+        $response->assertSee($this->domainData['name']);
     }
 
     public function testDomainsIndex()

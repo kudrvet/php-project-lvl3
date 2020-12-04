@@ -40,7 +40,7 @@ Route::post('/', function (Request $request) {
 
     $domainFromDB = DB::table('domains')->select()
         ->where('name', '=', $normalizedName)
-        ->get()->toArray();
+        ->get()->first();
 
     if (empty($domainFromDB)) {
         $id = DB::table('domains')->insertGetId(
@@ -52,13 +52,13 @@ Route::post('/', function (Request $request) {
     }
 
     flash('This url is existed!')->success();
-    return redirect()->route('domains.show', ['id' => $domainFromDB[0]->id]);
+    return redirect()->route('domains.show', ['id' => $domainFromDB->id]);
 })->name('domains.store');
 
 Route::get('/domains/{id}', function ($id) {
 
-    $domain = DB::table('domains')->where('id', '=', $id)->get()->all();
 
+    $domain = DB::table('domains')->find($id);
     if (empty($domain)) {
         abort(404);
     }
@@ -66,20 +66,14 @@ Route::get('/domains/{id}', function ($id) {
     $domainsChecks = DB::table('domain_checks')
         ->where('domain_id', '=', $id)->orderByDesc('created_at')->get();
 
-    return view('domains_show', ['domain' => $domain[0], 'domainsChecks' => $domainsChecks]);
+    return view('domains_show', ['domain' => $domain, 'domainsChecks' => $domainsChecks]);
 })->name('domains.show');
 
 Route::get('/domains', function () {
 
-    $latestChecks = DB::table('domain_checks')
-        ->select('domain_id', DB::raw('MAX(created_at) as last_post_created_at'))
-        ->groupBy('domain_id');
-
     $lastChecksWithStatus = DB::table('domain_checks')
-        ->JoinSub($latestChecks, 'latest_checks', function ($join) {
-            $join->on('domain_checks.created_at', '=', 'latest_checks.last_post_created_at');
-        })
-        ->select('latest_checks.domain_id', 'latest_checks.last_post_created_at', 'domain_checks.status_code');
+        ->select('domain_id','status_code', DB::raw('MAX(created_at) as last_post_created_at'))
+        ->groupBy('domain_id','status_code');
 
     $domainsWithLastCheck = DB::table('domains')
         ->leftjoinSub($lastChecksWithStatus, 'latest_checks', function ($join) {
@@ -94,38 +88,36 @@ Route::get('/domains', function () {
 Route::post('/domains/{id}/checks', function ($id) {
 
     $nowTime = Carbon::now('Europe/Moscow')->toDateTimeString();
-    $domainName = DB::table('domains')
-        ->select('name')
-        ->where('id', '=', $id)
-        ->get()[0]->name;
 
-    $response = Http::get($domainName);
-    $status_code = $response->status();
-    if ($status_code == 404) {
-        flash('This domain is not available')->error();
-        return redirect()->back();
+    try {
+        $domainName = DB::table('domains')
+         ->find($id,['name'])->name;
+        $response = Http::get($domainName);
+        $status_code = $response->status();
+        $parsedHtml = new DiDom\Document($response->body());
+        $h1Tags = $parsedHtml->find('h1');
+        $formattedH1Tags = array_map(function ($tag) {
+            return $tag->text();
+        }, $h1Tags);
+
+//        $h1Tags = $parsedHtml->first('h1')->text();
+//        dd($h1Tags);
+
+        $keywords = optional($parsedHtml->first('[name="keywords"]'))->getAttribute('content');
+        $description = optional($parsedHtml->first('[name="description"]'))->getAttribute('content');
+
+        DB::table('domain_checks')
+         ->insert(['domain_id' => $id,
+             'status_code' => $status_code,
+             'h1' => implode("", $formattedH1Tags),
+             'keywords' => $keywords,
+             'description' => $description,
+             'created_at' => $nowTime, 'updated_at' => $nowTime]);
     }
 
-    $parsedHtml = new DiDom\Document($response->body());
-
-    $h1Tags = $parsedHtml->find('h1');
-    $formattedH1Tags = array_map(function ($tag) {
-        return $tag->text();
-    }, $h1Tags);
-
-    $keyWordsTagDom = $parsedHtml->find('[name="keywords"]');
-    $keywords =  isset($keyWordsTagDom[0]) ? optional($keyWordsTagDom[0])->getAttribute('content') : null;
-
-    $descriptionTagDom = $parsedHtml->find('[name="description"]');
-    $description = isset($keyWordsTagDom[0]) ? optional($descriptionTagDom[0])->getAttribute('content') : null;
-
-    DB::table('domain_checks')
-        ->insert(['domain_id' => $id,
-        'status_code' => $status_code,
-        'h1' => implode("", $formattedH1Tags),
-        'keywords' => $keywords,
-        'description' => $description,
-        'created_at' => $nowTime, 'updated_at' => $nowTime]);
+    catch (Exception $e) {
+        flash('Something go wrong!')->error();
+    }
 
     return redirect(route('domains.show', ['id' => $id]));
 })->name('domains.check');
