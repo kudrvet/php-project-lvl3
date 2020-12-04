@@ -7,6 +7,7 @@ setup:
 	php artisan key:gen --ansi
 	touch database/database.sqlite
 	php artisan migrate
+	npm install
 
 migrate:
 	php artisan migrate
@@ -27,7 +28,7 @@ deploy:
 	git push heroku
 
 lint:
-	composer run-script phpcs -- --standard=PSR12 public
+	composer run-script phpcs
 
 lint-fix:
 	composer phpcbf

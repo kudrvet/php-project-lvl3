@@ -15,3 +15,7 @@ logs/
 coverage/
 test-reporter
 phpunit.xml.bak
+public/css/
+public/js/
+package-lock.json
+public/mix-manifest.json
