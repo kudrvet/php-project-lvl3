@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use \Illuminate\Http\Request;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
@@ -28,7 +28,7 @@ Route::post('/', function (Request $request) {
     $validator = Validator::make($request->input('domain'), [
         'name' => 'url']);
 
-    if($validator->fails()) {
+    if ($validator->fails()) {
         flash('Invalid URL!')->error();
         return redirect()->route('homepage')->withInput()->withErrors($validator);
     }
@@ -39,58 +39,56 @@ Route::post('/', function (Request $request) {
     $nowTime = Carbon::now('Europe/Moscow')->toDateTimeString();
 
     $domainFromDB = DB::table('domains')->select()
-        ->where('name','=',$normalizedName)
+        ->where('name', '=', $normalizedName)
         ->get()->toArray();
 
-    if(empty($domainFromDB)) {
+    if (empty($domainFromDB)) {
         $id = DB::table('domains')->insertGetId(
             ['name' => $normalizedName, 'created_at' => $nowTime, 'updated_at' => $nowTime]
         );
 
         flash('This url is added!')->success();
-        return redirect()->route('domains.show',['id'=> $id]);
+        return redirect()->route('domains.show', ['id' => $id]);
     }
 
     flash('This url is existed!')->success();
-    return redirect()->route('domains.show',['id'=> $domainFromDB[0]->id]);
-
+    return redirect()->route('domains.show', ['id' => $domainFromDB[0]->id]);
 })->name('domains.store');
 
 Route::get('/domains/{id}', function ($id) {
 
-    $domain = DB::table('domains')->where('id','=',$id)->get()->all();
+    $domain = DB::table('domains')->where('id', '=', $id)->get()->all();
 
-    if(empty($domain)) {
+    if (empty($domain)) {
         abort(404);
     }
 
     $domainsChecks = DB::table('domain_checks')
-        ->where('domain_id','=',$id)->orderByDesc('created_at')->get();
+        ->where('domain_id', '=', $id)->orderByDesc('created_at')->get();
 
-    return view('domains_show',['domain' => $domain[0], 'domainsChecks' => $domainsChecks]);
+    return view('domains_show', ['domain' => $domain[0], 'domainsChecks' => $domainsChecks]);
 })->name('domains.show');
 
 Route::get('/domains', function () {
 
     $latestChecks = DB::table('domain_checks')
-        ->select('domain_id',DB::raw('MAX(created_at) as last_post_created_at'))
+        ->select('domain_id', DB::raw('MAX(created_at) as last_post_created_at'))
         ->groupBy('domain_id');
 
     $lastChecksWithStatus = DB::table('domain_checks')
-        ->JoinSub($latestChecks,'latest_checks', function($join) {
-            $join->on('domain_checks.created_at','=','latest_checks.last_post_created_at');
+        ->JoinSub($latestChecks, 'latest_checks', function ($join) {
+            $join->on('domain_checks.created_at', '=', 'latest_checks.last_post_created_at');
         })
-        ->select('latest_checks.domain_id','latest_checks.last_post_created_at','domain_checks.status_code');
+        ->select('latest_checks.domain_id', 'latest_checks.last_post_created_at', 'domain_checks.status_code');
 
     $domainsWithLastCheck = DB::table('domains')
         ->leftjoinSub($lastChecksWithStatus, 'latest_checks', function ($join) {
             $join->on('domains.id', '=', 'latest_checks.domain_id');
         })
-        ->select('domains.id','domains.name','latest_checks.status_code','latest_checks.last_post_created_at')
+        ->select('domains.id', 'domains.name', 'latest_checks.status_code', 'latest_checks.last_post_created_at')
         ->get();
 
-    return view('domains_index',['domains' => $domainsWithLastCheck]);
-
+    return view('domains_index', ['domains' => $domainsWithLastCheck]);
 })->name('domains.index');
 
 Route::post('/domains/{id}/checks', function ($id) {
@@ -98,7 +96,7 @@ Route::post('/domains/{id}/checks', function ($id) {
     $nowTime = Carbon::now('Europe/Moscow')->toDateTimeString();
     $domainName = DB::table('domains')
         ->select('name')
-        ->where('id','=',$id)
+        ->where('id', '=', $id)
         ->get()[0]->name;
 
     $response = Http::get($domainName);
@@ -111,9 +109,9 @@ Route::post('/domains/{id}/checks', function ($id) {
     $parsedHtml = new DiDom\Document($response->body());
 
     $h1Tags = $parsedHtml->find('h1');
-    $formattedH1Tags= array_map(function($tag) {
+    $formattedH1Tags = array_map(function ($tag) {
         return $tag->text();
-    },$h1Tags);
+    }, $h1Tags);
 
     $keyWordsTagDom = $parsedHtml->find('[name="keywords"]');
     $keywords =  isset($keyWordsTagDom[0]) ? optional($keyWordsTagDom[0])->getAttribute('content') : null;
@@ -124,11 +122,10 @@ Route::post('/domains/{id}/checks', function ($id) {
     DB::table('domain_checks')
         ->insert(['domain_id' => $id,
         'status_code' => $status_code,
-        'h1' => implode("",$formattedH1Tags),
+        'h1' => implode("", $formattedH1Tags),
         'keywords' => $keywords,
         'description' => $description,
         'created_at' => $nowTime, 'updated_at' => $nowTime]);
 
-    return redirect(route('domains.show',['id' => $id]));
-
+    return redirect(route('domains.show', ['id' => $id]));
 })->name('domains.check');
