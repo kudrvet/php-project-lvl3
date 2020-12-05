@@ -1,7 +1,11 @@
 .ex {
     height: 5px;
     }
-#myasdasd {
-    color: blue;
-    text-align: center;
+#help {
+    position: absolute; /* Абсолютное позиционирование */
+    right: 0; /* Положение элемента от правого края */
+    top: 20px; /* Положение от верхнего края */
+    width: 225px; /* Ширина блока */
+    padding: 5px; /* Поля вокруг текста */
+    background: #f0f0f0; /* Цвет фона */
 }
