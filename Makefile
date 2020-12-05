@@ -32,3 +32,10 @@ lint:
 
 lint-fix:
 	composer run-script phpcbf
+
+fresh-seed:
+	php artisan migrate:fresh
+	php artisan db:seed --class=DomainSeeder
+	php artisan db:seed --class=DomainChecksSeeder
+
+

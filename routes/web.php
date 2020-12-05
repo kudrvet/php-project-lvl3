@@ -71,18 +71,16 @@ Route::get('/domains/{id}', function ($id) {
 
 Route::get('/domains', function () {
 
-    $lastChecksWithStatus = DB::table('domain_checks')
-        ->select('domain_id', 'status_code', DB::raw('MAX(created_at) as last_post_created_at'))
-        ->groupBy('domain_id', 'status_code');
+    $domains = DB::table('domains')->get();
+    $lastChecks = DB::table('domain_checks')
+        ->select('domain_id', 'created_at', 'status_code')
+        ->orderBy('domain_id')
+        ->orderBy('created_at')
+        ->distinct('domain_id')
+        ->get()
+        ->keyBy('domain_id');
 
-    $domainsWithLastCheck = DB::table('domains')
-        ->leftjoinSub($lastChecksWithStatus, 'latest_checks', function ($join) {
-            $join->on('domains.id', '=', 'latest_checks.domain_id');
-        })
-        ->select('domains.id', 'domains.name', 'latest_checks.status_code', 'latest_checks.last_post_created_at')
-        ->get();
-
-    return view('domains_index', ['domains' => $domainsWithLastCheck]);
+    return view('domains_index', ['domains' => $domains, 'lastChecks' => $lastChecks]);
 })->name('domains.index');
 
 Route::post('/domains/{id}/checks', function ($id) {
@@ -95,21 +93,16 @@ Route::post('/domains/{id}/checks', function ($id) {
         $response = Http::get($domainName);
         $status_code = $response->status();
         $parsedHtml = new DiDom\Document($response->body());
-        $h1Tags = $parsedHtml->find('h1');
-        $formattedH1Tags = array_map(function ($tag) {
-            return $tag->text();
-        }, $h1Tags);
 
-//        $h1Tags = $parsedHtml->first('h1')->text();
-//        dd($h1Tags);
 
+        $h1Tags = optional($parsedHtml->first('h1'))->text();
         $keywords = optional($parsedHtml->first('[name="keywords"]'))->getAttribute('content');
         $description = optional($parsedHtml->first('[name="description"]'))->getAttribute('content');
 
         DB::table('domain_checks')
          ->insert(['domain_id' => $id,
              'status_code' => $status_code,
-             'h1' => implode("", $formattedH1Tags),
+             'h1' => $h1Tags,
              'keywords' => $keywords,
              'description' => $description,
              'created_at' => $nowTime, 'updated_at' => $nowTime]);

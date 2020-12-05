@@ -44,12 +44,20 @@
                 <td>{{$domainCheck->status_code}}</td>
                 <td>{{$domainCheck->h1}}</td>
                 <td>{{$domainCheck->keywords}}</td>
-                <td>{{$domainCheck->description}}</td>
-                <td>{{$domainCheck->created_at}}</td>
+                <td>
+                    <div class = "ex">
+                    {{$domainCheck->description}}
+                    </div>
+                </td>
+                <td height="5">{{$domainCheck->created_at}}</td>
             </tr>
         @endforeach
         </tbody>
     </table>
+
+    <div id="myasdasd">
+        "Приветули!"
+    </div>
 @endsection
 
 

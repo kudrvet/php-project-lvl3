@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Domain;
-use App\Models\DomainCheck;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Faker\Factory;
 
 class DomainSeeder extends Seeder
 {
@@ -16,8 +15,14 @@ class DomainSeeder extends Seeder
      */
     public function run()
     {
-        Domain::factory()->count(3)->create()->each(function ($domain) {
-            DomainCheck::factory()->count(1)->create(['domain_id' => $domain->id]);
-        });
+        $faker = Factory::create();
+        $data = [];
+        for ($i = 0; $i < 5; $i++) {
+            $data[$i]['name'] = normalizeUrl($faker->unique()->url);
+            $data[$i]['created_at'] = $faker->dateTimeThisMonth;
+            $data[$i]['updated_at'] = $faker->dateTimeThisMonth;
+        }
+
+        DB::table('domains')->insert($data);
     }
 }
