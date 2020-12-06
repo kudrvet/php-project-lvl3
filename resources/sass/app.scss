@@ -7,7 +7,16 @@
 // Bootstrap
 @import '~bootstrap/scss/bootstrap';
 
-.ex {
-  background: #f0f0f1; /* Цвет фона */
-  height: 50px ;
+.tabletext {
+  height: 80px;
+  overflow: hidden;
+  line-height: 16px;
+}
+
+.navbar  {
+  height: 100px;
+}
+
+.nav-item  {
+  font-size: 28px;
 }

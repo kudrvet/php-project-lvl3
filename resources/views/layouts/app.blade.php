@@ -13,12 +13,13 @@
 </div>
 
 
-<nav class="navbar navbar-dark bg-red">
+<nav class="navbar navbar-dark bg-red ">
+    <div class="nav-item">
+        <a href={{route('homepage')}}>Homepage |</a>
+        <a href={{route('domains.index')}}>Domains</a>
+    </div>
 
-{{ link_to_route('homepage',$title = 'Homepage', $parameters = [], $attributes = [])}}
-{{ link_to_route('domains.index', $title = 'Domains', $parameters = [], $attributes = [])}}
 </nav>
-
 
 <div class="container">
     @yield('content')

@@ -45,10 +45,20 @@
             <tr>
                 <td>{{$domainCheck->id}}</td>
                 <td>{{$domainCheck->status_code}}</td>
-                <td>{{$domainCheck->h1}}</td>
-                <td>{{$domainCheck->keywords ? substr($domainCheck->keywords,0,50)."..." : null}}</td>
+                <td>
+                    <div class ="tabletext">
+                        {{$domainCheck->h1}}
+                    </div>
+                </td>
+                <td>
+                    <div class ="tabletext">
+                       {{$domainCheck->keywords}}
+                    </div>
+                </td>
                 <td >
-                    {{{$domainCheck->keywords ? substr($domainCheck->description,0,50)."..." : null}}}
+                    <div class ="tabletext">
+                        {{$domainCheck->description}}
+                    </div>
                 </td>
                 <td>{{$domainCheck->created_at}}</td>
             </tr>

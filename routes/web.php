@@ -66,6 +66,7 @@ Route::get('/domains/{id}', function ($id) {
     $domainsChecks = DB::table('domain_checks')
         ->where('domain_id', '=', $id)->orderByDesc('created_at')->get();
 
+
     return view('domains_show', ['domain' => $domain, 'domainsChecks' => $domainsChecks]);
 })->name('domains.show');
 
