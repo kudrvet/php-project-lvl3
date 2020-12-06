@@ -13,7 +13,7 @@
 </div>
 
 
-<nav class="navbar navbar-dark bg-red ">
+<nav class="navbar navbar-dark bg-red mb-5">
     <div class="nav-item">
         <a href={{route('homepage')}}>Homepage |</a>
         <a href={{route('domains.index')}}>Domains</a>
