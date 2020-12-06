@@ -1,6 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
+
+    <h1 class = 'mt-5 mb-3'>Site : {{$domain->name}} </h1>
     <table class="table table-bordered">
         <thead>
         <tr>
@@ -21,11 +23,12 @@
         </tbody>
     </table>
 
+    <h2 class="mt-5 mb-3">Checks</h2>
     {{Form::open(['route' => ['domains.check',$domain->id]])}}
     {{Form::submit('Check!')}}
     {{Form::close()}}
 
-    <table class="table table-bordered">
+    <table class="table table-bordered table-hover mt-5">
         <thead>
         <tr>
             <th>id</th>
@@ -43,23 +46,16 @@
                 <td>{{$domainCheck->id}}</td>
                 <td>{{$domainCheck->status_code}}</td>
                 <td>{{$domainCheck->h1}}</td>
-                <td>{{$domainCheck->keywords}}</td>
-                <td>
-                    <div class = "ex">
-                    {{$domainCheck->description}}
-                    </div>
+                <td>{{$domainCheck->keywords ? substr($domainCheck->keywords,0,50)."..." : null}}</td>
+                <td >
+                    {{{$domainCheck->keywords ? substr($domainCheck->description,0,50)."..." : null}}}
                 </td>
-                <td height="5">{{$domainCheck->created_at}}</td>
+                <td>{{$domainCheck->created_at}}</td>
             </tr>
         @endforeach
         </tbody>
     </table>
 
-    <div id="help">
-        Этот элемент помогает в случае, когда вы находитесь в осознании того
-        факта, что совершенно не понимаете, кто и как вам может помочь. Именно
-        в этот момент мы и подсказываем, что помочь вам никто не сможет.
-    </div>
 @endsection
 
 
