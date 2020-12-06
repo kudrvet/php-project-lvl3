@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>Document</title>
-    <link href="{{ secure_asset(asset('css/app.css')) }}" rel="stylesheet">
-    <script src="{{ secure_asset(asset('js/app.js')) }}"></script>
+    <link href="{{ secure_asset('css/app.css') }}" rel="stylesheet">
+    <script src="{{ secure_asset('js/app.js') }}"></script>
 </head>
 <body>
 
