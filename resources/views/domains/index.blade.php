@@ -1,6 +1,9 @@
 @extends('layouts.app')
 @section('content')
-<table class="table table-bordered">
+
+    <div class="container-lg">
+<h1 class="mt-5 mb-3 ml-3">Domains</h1>
+<table class="table table-bordered table-hover">
     <thead>
     <tr>
         <th>ID</th>
@@ -22,4 +25,5 @@
     @endforeach
     </tbody>
 </table>
+    </div>
 @endsection

@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
+<div class="container-lg">
     <h1 class = 'mt-5 mb-3'>Site : {{$domain->name}} </h1>
     <table class="table table-bordered">
         <thead>
@@ -22,10 +23,12 @@
         </tbody>
     </table>
 
-    <h2 class="mt-5 mb-3">Checks</h2>
-    {{Form::open(['route' => ['domains.check',$domain->id]])}}
-    {{Form::submit('Check!')}}
-    {{Form::close()}}
+    <h2 class="mt-5  ml-5">Checks</h2>
+    <div class="ml-5">
+        {{Form::open(['route' => ['domains.check',$domain->id]])}}
+        <button type="submit" class="btn  btn-dark mt-3 px-5 text-uppercase">Check</button>
+        {{Form::close()}}
+    </div>
 
     <table class="table table-bordered table-hover mt-5">
         <thead>
@@ -52,6 +55,7 @@
         @endforeach
         </tbody>
     </table>
+</div>
 @endsection
 
 
