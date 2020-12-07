@@ -56,11 +56,7 @@ class DomainsTest extends TestCase
 
     public function testDomainsIndex()
     {
-        $domains = DB::table('domains')->get();
         $response = $this->get(route('domains.index'));
-
-        foreach ($domains as $domain) {
-            $response->assertSee($domain->name);
-        }
+        $response->assertSee($this->domainData);
     }
 }
