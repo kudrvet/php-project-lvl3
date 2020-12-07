@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\RequestException;
+use Illuminate\Http\Client\ConnectionException;
 
 /*
 |--------------------------------------------------------------------------
@@ -80,31 +82,35 @@ Route::get('/domains', function () {
 })->name('domains.index');
 
 Route::post('/domains/{id}/checks', function ($id) {
+    $domainName = DB::table('domains')
+        ->find($id, ['name'])->name;
 
     try {
-        $domainName = DB::table('domains')
-         ->find($id, ['name'])->name;
-        $response = Http::get($domainName);
-        $status_code = $response->status();
-        $parsedHtml = new DiDom\Document($response->body());
-
-
-        $h1Tags = optional($parsedHtml->first('h1'))->text();
-        $keywords = optional($parsedHtml->first('[name="keywords"]'))->getAttribute('content');
-        $description = optional($parsedHtml->first('[name="description"]'))->getAttribute('content');
-
-        $nowTime = Carbon::now('Europe/Moscow')->toDateTimeString();
-
-        DB::table('domain_checks')
-         ->insert(['domain_id' => $id,
-             'status_code' => $status_code,
-             'h1' => $h1Tags,
-             'keywords' => $keywords,
-             'description' => $description,
-             'created_at' => $nowTime, 'updated_at' => $nowTime]);
-    } catch (Exception $e) {
-        flash('Something go wrong!')->error();
+        $response = Http::timeout(3)->retry(3, 100)->get($domainName);
+    } catch (ConnectionException $e) {
+        flash('Connection Error!')->error();
+        return redirect()->back();
+    } catch (RequestException $e) {
+        flash('Connection Error!')->error();
+        return redirect()->back();
     }
+
+    $status_code = $response->status();
+
+    $parsedHtml = new DiDom\Document($response->body());
+    $h1Tags = optional($parsedHtml->first('h1'))->text();
+    $keywords = optional($parsedHtml->first('[name="keywords"]'))->getAttribute('content');
+    $description = optional($parsedHtml->first('[name="description"]'))->getAttribute('content');
+
+    $nowTime = Carbon::now('Europe/Moscow')->toDateTimeString();
+
+    DB::table('domain_checks')
+        ->insert(['domain_id' => $id,
+            'status_code' => $status_code,
+            'h1' => $h1Tags,
+            'keywords' => $keywords,
+            'description' => $description,
+            'created_at' => $nowTime, 'updated_at' => $nowTime]);
 
     return redirect(route('domains.show', ['id' => $id]));
 })->name('domains.check');
