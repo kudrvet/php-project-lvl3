@@ -87,10 +87,7 @@ Route::post('/domains/{id}/checks', function ($id) {
 
     try {
         $response = Http::timeout(3)->retry(3, 100)->get($domainName);
-    } catch (ConnectionException $e) {
-        flash('Connection Error!')->error();
-        return redirect()->back();
-    } catch (RequestException $e) {
+    } catch (ConnectionException | RequestException $e) {
         flash('Connection Error!')->error();
         return redirect()->back();
     }
