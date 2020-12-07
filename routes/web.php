@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Http;
-use DiDom\Document;
 
 /*
 |--------------------------------------------------------------------------
