@@ -20,14 +20,12 @@ class DomainChecksTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $dataStamp = '2020-12-04 19:11:54';
-        $this->domainData = ['name' => 'https://www.example.ru','updated_at' => $dataStamp, 'created_at' => $dataStamp];
+        $this->domainData = ['name' => 'https://www.example.ru'];
         $this->domainId = DB::table('domains')->insertGetId($this->domainData);
     }
 
     public function testDomainsCheck()
     {
-
         $fakeHtml = file_get_contents(realpath(implode(DIRECTORY_SEPARATOR, [__DIR__,'..','fixtures','test.html'])));
         $domainData = [
             'domain_id' => $this->domainId,
