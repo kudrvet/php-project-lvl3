@@ -24,7 +24,6 @@ Route::get('/', function () {
 })->name('homepage');
 
 Route::post('/', function (Request $request) {
-
     $validator = Validator::make($request->input('domain'), [
         'name' => 'url']);
 
@@ -56,8 +55,6 @@ Route::post('/', function (Request $request) {
 })->name('domains.store');
 
 Route::get('/domains/{id}', function ($id) {
-
-
     $domain = DB::table('domains')->find($id);
     if (empty($domain)) {
         abort(404);
@@ -67,11 +64,10 @@ Route::get('/domains/{id}', function ($id) {
         ->where('domain_id', '=', $id)->orderByDesc('created_at')->get();
 
 
-    return view('domains_show', ['domain' => $domain, 'domainsChecks' => $domainsChecks]);
+    return view('domains.show', ['domain' => $domain, 'domainsChecks' => $domainsChecks]);
 })->name('domains.show');
 
 Route::get('/domains', function () {
-
     $domains = DB::table('domains')->get();
     $lastChecks = DB::table('domain_checks')
         ->select('domain_id', 'created_at', 'status_code')
@@ -81,12 +77,10 @@ Route::get('/domains', function () {
         ->get()
         ->keyBy('domain_id');
 
-    return view('domains_index', ['domains' => $domains, 'lastChecks' => $lastChecks]);
+    return view('domains.index', ['domains' => $domains, 'lastChecks' => $lastChecks]);
 })->name('domains.index');
 
 Route::post('/domains/{id}/checks', function ($id) {
-
-    $nowTime = Carbon::now('Europe/Moscow')->toDateTimeString();
 
     try {
         $domainName = DB::table('domains')
@@ -99,6 +93,8 @@ Route::post('/domains/{id}/checks', function ($id) {
         $h1Tags = optional($parsedHtml->first('h1'))->text();
         $keywords = optional($parsedHtml->first('[name="keywords"]'))->getAttribute('content');
         $description = optional($parsedHtml->first('[name="description"]'))->getAttribute('content');
+
+        $nowTime = Carbon::now('Europe/Moscow')->toDateTimeString();
 
         DB::table('domain_checks')
          ->insert(['domain_id' => $id,

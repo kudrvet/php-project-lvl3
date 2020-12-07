@@ -21,15 +21,13 @@ class DomainsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $dataStamp = '2020-12-04 19:11:54';
-        $this->domainData = ['name' => 'https://www.example.ru','updated_at' => $dataStamp, 'created_at' => $dataStamp];
+        $this->domainData = ['name' => 'https://www.example.ru'];
         $this->domainId = DB::table('domains')->insertGetId($this->domainData);
     }
 
     public function testHomepage()
     {
         $response = $this->get(route('homepage'));
-
         $response->assertStatus(200);
     }
 
@@ -58,26 +56,10 @@ class DomainsTest extends TestCase
 
     public function testDomainsIndex()
     {
-        $latestChecks = DB::table('domain_checks')
-            ->select('domain_id', DB::raw('MAX(created_at) as last_post_created_at'))
-            ->groupBy('domain_id');
+        $domains = DB::table('domains')->get();
+        $response = $this->get(route('domains.index'));
 
-        $lastChecksWithStatus = DB::table('domain_checks')
-            ->JoinSub($latestChecks, 'latest_checks', function ($join) {
-                $join->on('domain_checks.created_at', '=', 'latest_checks.last_post_created_at');
-            })
-            ->select('latest_checks.domain_id', 'latest_checks.last_post_created_at', 'domain_checks.status_code');
-
-        $domainsWithLastCheck = DB::table('domains')
-            ->leftjoinSub($lastChecksWithStatus, 'latest_checks', function ($join) {
-                $join->on('domains.id', '=', 'latest_checks.domain_id');
-            })
-            ->select('domains.id', 'domains.name', 'latest_checks.status_code', 'latest_checks.last_post_created_at')
-            ->get();
-
-         $response = $this->get(route('domains.index'));
-
-        foreach ($domainsWithLastCheck as $domain) {
+        foreach ($domains as $domain) {
             $response->assertSee($domain->name);
         }
     }

@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-
     <h1 class = 'mt-5 mb-3'>Site : {{$domain->name}} </h1>
     <table class="table table-bordered">
         <thead>
@@ -45,27 +44,14 @@
             <tr>
                 <td>{{$domainCheck->id}}</td>
                 <td>{{$domainCheck->status_code}}</td>
-                <td>
-                    <div class ="tabletext">
-                        {{$domainCheck->h1}}
-                    </div>
-                </td>
-                <td>
-                    <div class ="tabletext">
-                       {{$domainCheck->keywords}}
-                    </div>
-                </td>
-                <td >
-                    <div class ="tabletext">
-                        {{$domainCheck->description}}
-                    </div>
-                </td>
+                <td>{{Str::limit($domainCheck->h1,30)}}</td>
+                <td>{{Str::limit($domainCheck->keywords,30)}}</td>
+                <td >{{Str::limit($domainCheck->description,30)}}</td>
                 <td>{{$domainCheck->created_at}}</td>
             </tr>
         @endforeach
         </tbody>
     </table>
-
 @endsection
 
 
