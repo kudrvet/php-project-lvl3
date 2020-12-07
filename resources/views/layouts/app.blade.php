@@ -5,8 +5,8 @@
     <title>Document</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="csrf-param" content="_token" />
-    <link href={{ asset('css/app.css') }} rel="stylesheet">
-    <script src="{{ asset('/js/app.js') }}"></script>
+    <link href={{ secure_asset('css/app.css') }} rel="stylesheet">
+    <script src="{{ secure_asset('/js/app.js') }}"></script>
 </head>
 <body class="d-flex flex-column">
 
