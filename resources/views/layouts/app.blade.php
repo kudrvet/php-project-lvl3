@@ -29,11 +29,7 @@
         </div>
     </nav>
 </header>
-
-<div class="container">
-    @include('flash::message')
-</div>
-
+    @yield('flash')
 <main class="flex-grow-1">
     @yield('content')
 </main>
