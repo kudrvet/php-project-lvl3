@@ -73,7 +73,7 @@ Route::get('/domains', function () {
     $lastChecks = DB::table('domain_checks')
         ->select('domain_id', 'created_at', 'status_code')
         ->orderBy('domain_id')
-        ->orderBy('created_at')
+        ->orderByDesc('created_at')
         ->distinct('domain_id')
         ->get()
         ->keyBy('domain_id');
