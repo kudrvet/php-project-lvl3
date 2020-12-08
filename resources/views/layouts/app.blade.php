@@ -10,11 +10,6 @@
 </head>
 <body class="d-flex flex-column">
 
-<div class="container">
-    @include('flash::message')
-</div>
-
-
 <header>
     <nav class="navbar navbar-expand-md navbar-dark bg-dark">
         <a class="navbar-brand" href={{route('homepage')}}>Analyzer</a>
@@ -34,6 +29,10 @@
         </div>
     </nav>
 </header>
+
+<div class="container">
+    @include('flash::message')
+</div>
 
 <main class="flex-grow-1">
     @yield('content')
