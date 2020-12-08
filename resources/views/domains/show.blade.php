@@ -25,7 +25,7 @@
 
     <h2 class="mt-5  ml-5">Checks</h2>
     <div class="ml-5">
-        {{Form::open(['route' => ['domains.check',$domain->id]])}}
+        {{Form::open(['route' => ['domains.checks',$domain->id]])}}
         <button type="submit" class="btn  btn-dark mt-3 px-5 text-uppercase">Check</button>
         {{Form::close()}}
     </div>

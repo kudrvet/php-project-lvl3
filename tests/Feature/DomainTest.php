@@ -2,9 +2,7 @@
 
 namespace Tests\Feature;
 
-use Database\Seeders\DomainSeeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class DomainsTest extends TestCase

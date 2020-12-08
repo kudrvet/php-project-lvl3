@@ -38,9 +38,9 @@ Route::post('/', function (Request $request) {
 
     $nowTime = Carbon::now('Europe/Moscow')->toDateTimeString();
 
-    $domainFromDB = DB::table('domains')->select()
+    $domainFromDB = DB::table('domains')
         ->where('name', '=', $normalizedName)
-        ->get()->first();
+        ->first();
 
     if (empty($domainFromDB)) {
         $id = DB::table('domains')->insertGetId(
@@ -69,7 +69,7 @@ Route::get('/domains/{id}', function ($id) {
 })->name('domains.show');
 
 Route::get('/domains', function () {
-    $domains = DB::table('domains')->get();
+    $domains = DB::table('domains')->orderBy('id')->get();
     $lastChecks = DB::table('domain_checks')
         ->select('domain_id', 'created_at', 'status_code')
         ->orderBy('domain_id')
@@ -88,14 +88,14 @@ Route::post('/domains/{id}/checks', function ($id) {
     try {
         $response = Http::timeout(3)->retry(3, 100)->get($domainName);
     } catch (ConnectionException | RequestException $e) {
-        flash('Connection Error!')->error();
+        flash('Server is unavailable. Timeout is over.')->error();
         return redirect()->back();
     }
 
     $status_code = $response->status();
 
     $parsedHtml = new DiDom\Document($response->body());
-    $h1Tags = optional($parsedHtml->first('h1'))->text();
+    $h1 = optional($parsedHtml->first('h1'))->text();
     $keywords = optional($parsedHtml->first('[name="keywords"]'))->getAttribute('content');
     $description = optional($parsedHtml->first('[name="description"]'))->getAttribute('content');
 
@@ -104,10 +104,10 @@ Route::post('/domains/{id}/checks', function ($id) {
     DB::table('domain_checks')
         ->insert(['domain_id' => $id,
             'status_code' => $status_code,
-            'h1' => $h1Tags,
+            'h1' => $h1,
             'keywords' => $keywords,
             'description' => $description,
             'created_at' => $nowTime, 'updated_at' => $nowTime]);
 
     return redirect(route('domains.show', ['id' => $id]));
-})->name('domains.check');
+})->name('domains.checks');

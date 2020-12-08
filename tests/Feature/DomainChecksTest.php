@@ -9,12 +9,6 @@ use Tests\TestCase;
 
 class DomainChecksTest extends TestCase
 {
-    /**
-     * A basic test example.
-     *
-     * @return void
-     *
-     */
     protected $domainId;
     protected $domainData;
     protected function setUp(): void
@@ -36,7 +30,7 @@ class DomainChecksTest extends TestCase
 
         Http::fake([$this->domainData['name'] => Http::response($fakeHtml, 200)]);
 
-        $response = $this->post(route('domains.check', $this->domainId));
+        $response = $this->post(route('domains.checks', $this->domainId));
 
         $response->assertRedirect(route('domains.show', ['id' => $this->domainId]));
         $this->assertDatabaseHas('domain_checks', $domainData);
